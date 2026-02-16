@@ -1,0 +1,14 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement style="flex-grow: 1;">
+        <ui:VisualElement style="flex-grow: 0; align-items: center; justify-content: flex-start; padding-top: 20px;">
+            <ui:Label name="ScoreLabel" text="SCORE: 0" style="color: white; font-size: 40px; -unity-font-style: bold; -unity-text-outline-width: 1px; -unity-text-outline-color: black;" />
+        </ui:VisualElement>
+        
+        <ui:VisualElement name="GameOverPanel" style="flex-grow: 1; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.7); display: none;">
+            <ui:Label text="GAME OVER" style="color: red; font-size: 80px; -unity-font-style: bold;" />
+            <ui:Button name="RestartButton" text="RESTART" style="font-size: 40px; padding: 10px 40px; margin-top: 20px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
+
+
