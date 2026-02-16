@@ -4,7 +4,10 @@
 TagManager:
   serializedVersion: 3
   tags:
+  - Corgi
+  - Sheep
   - Wolf
+  - Hut
   layers:
   - Default
   - TransparentFX
