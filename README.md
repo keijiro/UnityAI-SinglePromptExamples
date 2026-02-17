@@ -11,12 +11,16 @@ details after the initial generation.
 A mini game where you place corgis to create a safe path for sheep to reach
 their hut.
 
+[Prompt](CorgiAndWolves/Assets/Prompt.txt)
+
 ### Ninja Jump
 
 ![NinjaJump](https://github.com/user-attachments/assets/6048163f-7f7c-4cf1-8cb2-91b09b1e08cd)
 
 A 2D infinite runner with only three controls: accelerate (Right Arrow), slow
 down (Left Arrow), and jump (Up Arrow).
+
+[Prompt](NinjaJump/Prompt.txt)
 
 ### Reflex Shooter
 
@@ -25,6 +29,8 @@ down (Left Arrow), and jump (Up Arrow).
 A 2D shoot-'em-up where you cannot fire directly. Instead, you reflect enemy
 bullets with a force barrier to destroy them.
 
+[Prompt](ReflexShooter/Prompt.txt)
+
 ### Sum Ten
 
 A falling-block game prototype where your goal is to combine blocks so their
@@ -32,3 +38,5 @@ total becomes ten.
 
 (This is still a very rough prototype, and balancing it into something truly
 fun remains a challenge.)
+
+[Prompt](SumTen/Prompt.txt)
