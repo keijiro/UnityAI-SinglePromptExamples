@@ -6,15 +6,21 @@ details after the initial generation.
 
 ### Corgi And Wolves
 
+![CorgiAndWolves](https://github.com/user-attachments/assets/934dfe66-e582-4b82-a11d-6bda1f353a54)
+
 A mini game where you place corgis to create a safe path for sheep to reach
 their hut.
 
 ### Ninja Jump
 
+![NinjaJump](https://github.com/user-attachments/assets/6048163f-7f7c-4cf1-8cb2-91b09b1e08cd)
+
 A 2D infinite runner with only three controls: accelerate (Right Arrow), slow
 down (Left Arrow), and jump (Up Arrow).
 
 ### Reflex Shooter
+
+![ReflexShooter](https://github.com/user-attachments/assets/ab6d2800-1f0a-44bf-8343-178e9294ab38)
 
 A 2D shoot-'em-up where you cannot fire directly. Instead, you reflect enemy
 bullets with a force barrier to destroy them.
