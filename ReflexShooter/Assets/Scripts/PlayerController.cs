@@ -1,133 +1,185 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections.Generic;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
     public float maxSpeed = 10f;
-    public float smoothTime = 0.1f;
-    private Vector2 velocity;
+    public float acceleration = 50f;
+    public float rotationSpeed = 180f;
 
-    [Header("Energy")]
+    [Header("Energy & Barrier")]
+    public GameObject barrier;
     public float maxEnergy = 100f;
-    public float currentEnergy;
-    public float energyConsumptionRate = 30f;
-    public float energyRecoveryRate = 20f;
+    public float energyConsumption = 30f;
+    public float energyRecovery = 15f;
+    private float currentEnergy;
+    private bool isBarrierActive = false;
 
-    [Header("Shield")]
-    public GameObject shieldObject;
-    public float shieldRadius = 1.5f;
-
-    [Header("State")]
+    [Header("Death")]
+    public GameObject explosionPrefab;
     private bool isDead = false;
 
-    void Start()
+    private Rigidbody2D rb;
+
+    void Awake()
     {
+        rb = GetComponent<Rigidbody2D>();
+        if (rb == null) rb = gameObject.AddComponent<Rigidbody2D>();
+        rb.gravityScale = 0;
+        rb.linearDamping = 5f;
+
         currentEnergy = maxEnergy;
-        if (shieldObject) shieldObject.SetActive(false);
+        if (barrier != null) barrier.SetActive(false);
     }
 
     void Update()
     {
         if (isDead) return;
 
-        HandleMovement();
-        HandleShield();
+        HandleBarrier();
         HandleEnergy();
+        RotateToCursor();
     }
 
-    void HandleMovement()
+    void FixedUpdate()
     {
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mousePos.z = 0;
+        if (isDead) return;
 
-        Vector2 targetPos = mousePos;
-        Vector2 currentPos = transform.position;
+        MoveToCursor();
+    }
+
+    void MoveToCursor()
+    {
+        // Calculate target world position on Z=0 plane
+        Vector3 mousePos = Input.mousePosition;
+        mousePos.z = Mathf.Abs(Camera.main.transform.position.z); 
+        Vector2 targetWorldPos = Camera.main.ScreenToWorldPoint(mousePos);
         
-        Vector2 newPos = Vector2.SmoothDamp(currentPos, targetPos, ref velocity, smoothTime, maxSpeed);
-        transform.position = newPos;
+        Vector2 direction = (targetWorldPos - (Vector2)transform.position);
+        float distance = direction.magnitude;
 
-        // Rotation towards movement
-        if (velocity.sqrMagnitude > 0.01f)
+        // Calculate desired velocity
+        // It slows down as it gets closer to the mouse
+        float speed = Mathf.Min(maxSpeed, distance * 5f); 
+        Vector2 desiredVelocity = direction.normalized * speed;
+
+        // Use a more stable acceleration logic
+        // We limit the force so it doesn't cause physics explosions
+        Vector2 velocityDiff = desiredVelocity - rb.linearVelocity;
+        Vector2 force = velocityDiff * acceleration;
+
+        // Limit maximum force
+        float maxForce = 200f;
+        if (force.magnitude > maxForce)
         {
-            float angle = Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, angle), 10f * Time.deltaTime);
+            force = force.normalized * maxForce;
+        }
+
+        rb.AddForce(force);
+    }
+
+    void RotateToCursor()
+    {
+        Vector3 mousePos = Input.mousePosition;
+        mousePos.z = Mathf.Abs(Camera.main.transform.position.z);
+        Vector2 targetWorldPos = Camera.main.ScreenToWorldPoint(mousePos);
+        
+        Vector2 direction = (targetWorldPos - (Vector2)transform.position);
+        if (direction.sqrMagnitude > 0.001f)
+        {
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90f;
+            Quaternion targetRotation = Quaternion.Euler(0, 0, angle);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
     }
 
-    void HandleShield()
+    void HandleBarrier()
     {
-        bool shieldRequested = Input.GetMouseButton(0) && currentEnergy > 0;
-        
-        if (shieldObject)
+        bool mouseHeld = Input.GetMouseButton(0);
+        if (mouseHeld && currentEnergy > 0)
         {
-            shieldObject.SetActive(shieldRequested);
-        }
-
-        if (shieldRequested)
-        {
-            currentEnergy -= energyConsumptionRate * Time.deltaTime;
-            currentEnergy = Mathf.Max(0, currentEnergy);
-
-            // Reflection Logic (SphereCast or checking nearby bullets)
-            Collider2D[] bullets = Physics2D.OverlapCircleAll(transform.position, shieldRadius);
-            foreach (var col in bullets)
+            if (!isBarrierActive)
             {
-                Bullet b = col.GetComponent<Bullet>();
-                if (b != null && !b.isReflected)
-                {
-                    Vector2 normal = (b.transform.position - transform.position).normalized;
-                    b.Reflect(normal);
-                }
+                isBarrierActive = true;
+                if (barrier != null) barrier.SetActive(true);
+            }
+        }
+        else
+        {
+            if (isBarrierActive)
+            {
+                isBarrierActive = false;
+                if (barrier != null) barrier.SetActive(false);
             }
         }
     }
 
     void HandleEnergy()
     {
-        bool isShielding = shieldObject != null && shieldObject.activeSelf;
-        bool isStationary = velocity.magnitude < 0.1f;
-
-        if (!isShielding && isStationary)
+        if (isBarrierActive)
         {
-            currentEnergy += energyRecoveryRate * Time.deltaTime;
-            currentEnergy = Mathf.Min(maxEnergy, currentEnergy);
+            currentEnergy -= energyConsumption * Time.deltaTime;
+            if (currentEnergy <= 0)
+            {
+                currentEnergy = 0;
+                isBarrierActive = false;
+                if (barrier != null) barrier.SetActive(false);
+            }
+        }
+        else
+        {
+            // Recover when stationary (or very slow) and barrier is off
+            if (rb.linearVelocity.magnitude < 0.5f)
+            {
+                currentEnergy += energyRecovery * Time.deltaTime;
+                currentEnergy = Mathf.Min(currentEnergy, maxEnergy);
+            }
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    void OnTriggerEnter2D(Collider2D other)
     {
         if (isDead) return;
 
-        if (collision.CompareTag("EnemyBullet") || collision.CompareTag("Enemy"))
+        // Player is hit by enemy bullet (only if not reflected)
+        if (other.CompareTag("Bullet"))
         {
-            Explode();
+            Bullet bullet = other.GetComponent<Bullet>();
+            if (bullet != null && !bullet.isReflected)
+            {
+                Die();
+            }
+        }
+        else if (other.CompareTag("Enemy"))
+        {
+            Die();
         }
     }
 
-    [Header("Effects")]
-    public GameObject explosionPrefab;
-
-    public void Explode()
+    void Die()
     {
-        if (isDead) return;
         isDead = true;
-        
-        if (explosionPrefab)
+        Debug.Log("Player Destroyed!");
+        if (explosionPrefab != null)
         {
             Instantiate(explosionPrefab, transform.position, Quaternion.identity);
         }
-
-        Debug.Log("Player Exploded!");
-        GetComponent<SpriteRenderer>().enabled = false;
-        if (shieldObject) shieldObject.SetActive(false);
         
-        Invoke("RestartGame", 2f);
+        GetComponent<SpriteRenderer>().enabled = false;
+        if (barrier != null) barrier.SetActive(false);
+        
+        // Disable physics
+        rb.simulated = false;
+
+        Invoke(nameof(RestartGame), 2f);
     }
 
     void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+
+    public float GetEnergyNormalized() => currentEnergy / maxEnergy;
+    public bool IsBarrierActive() => isBarrierActive;
 }

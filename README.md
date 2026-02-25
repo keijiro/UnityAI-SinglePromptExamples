@@ -29,7 +29,7 @@ down (Left Arrow), and jump (Up Arrow).
 A 2D shoot-'em-up where you cannot fire directly. Instead, you reflect enemy
 bullets with a force barrier to destroy them.
 
-[Prompt](ReflexShooter/Prompt.txt)
+[Prompt](ReflexShooter/Assets/Prompt.txt)
 
 ### Sum Ten
 
